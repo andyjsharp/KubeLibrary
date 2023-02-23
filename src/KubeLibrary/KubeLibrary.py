@@ -255,13 +255,17 @@ class KubeLibrary:
         else:
             try:
                 config.load_kube_config(kube_config, context)
+                # fix for http proxy
+                proxy_url = environ.get('https_proxy', None) or environ.get('HTTPS_PROXY', None) or environ.get('http_proxy', None) or environ.get('HTTP_PROXY', None)
+                if proxy_url:
+                    client.Configuration._default.proxy = proxy_url
             except TypeError:
                 logger.error('Neither KUBECONFIG nor ~/.kube/config available.')
 
         if not self.api_client:
             self.api_client = client.ApiClient(configuration=client.Configuration().get_default_copy())
 
-        self.api_client.configuration.proxy = environ.get('http_proxy') or environ.get('HTTP_PROXY')
+        # self.api_client.configuration.proxy = environ.get('http_proxy') or environ.get('HTTP_PROXY')
 
         self._add_api('v1', client.CoreV1Api)
         self._add_api('networkingv1api', client.NetworkingV1Api)
